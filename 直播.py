@@ -195,10 +195,15 @@ def get_data():
             code_str = str(code)
         url = f'https://xbk.189.cn/xbkapi/lteration/index/recommend/anchorRecommend?provinceCode={code_str}'
         random_phone = f"1537266{randint(1000, 9999)}"
+#         headers = {
+#             "referer": "https://xbk.189.cn/xbk/newHome?version=9.4.0&yjz=no&l=card&longitude=%24longitude%24&latitude=%24latitude%24&utm_ch=hg_app&utm_sch=hg_sh_shdbcdl&utm_as=xbk_tj&loginType=1",
+#             "user-agent": f"CtClient;9.6.1;Android;12;SM-G9860;{b64encode(random_phone[5:11].encode()).decode().strip('=+')}!#!{b64encode(random_phone[0:5].encode()).decode().strip('=+')}"
+#         }
         headers = {
-            "referer": "https://xbk.189.cn/xbk/newHome?version=9.4.0&yjz=no&l=card&longitude=%24longitude%24&latitude=%24latitude%24&utm_ch=hg_app&utm_sch=hg_sh_shdbcdl&utm_as=xbk_tj&loginType=1",
-            "user-agent": f"CtClient;9.6.1;Android;12;SM-G9860;{b64encode(random_phone[5:11].encode()).decode().strip('=+')}!#!{b64encode(random_phone[0:5].encode()).decode().strip('=+')}"
-        }
+            "referer": "https://xbk.189.cn/xbk/newHome?version=10.0.1&l=card&longitude=0.000000&latitude=0.000000&utm_ch=hg_app&utm_sch=hg_sh_shdbcdl&utm_as=xbk_tj&loginType=1",
+            "user-agent": f"CtClient;10.0.1;iOS;16.1;iPhone 14 Pro Max;NTAwODM0!#!MTU5OTY=",
+            "Authorization":f"Bearer OOG2fYSrEM/sIZ7i2iZo03U9Va4F70wMK612ny6iTy8NVvwB2DGnaDOrqsajaBOYrZ4NcDTccmE3zJlVyu9NciArUcHJ/MOaiII2CGHux+iSadN+g+ve8KQNw0CEmiJQznis2VYKcjRYpYCo3ZNFFZd5gI664M4lmUVbTDtSgCUxRG+vRb/uP7mEglCBuDabfWMezGL8krMY2GzrTxxifBII7WQD/QDgAM8qrjWJnHP8ChtWxAW/K+oY5zVhMffb+irOXvckXcGOEyFdDmIV9p8VCjpnqE9c8H904bJnYlEgAliiDXK9E2ww42QsyOMq+X/Citc7oXMO919Clp45Hpj7Q/WCSfx/IA0Vg1rR1ezac8b/civpR5UE6IeWlRbOJrKexKNPGPpOdHJ0htCOnxw4d6+R+cYAuMvncu+syLQkCdoYwywmCx8x2eA5/991yFkdyMpTMSt3OxjMRVTp0NHfXWZPEc58GTzUfkw3lX3XFyLdSUc7rmjHf+obwizjSyf+FK4mtMxnyrkDgVpc+RvMg1L2EfyN8lSVez8SMtSJYZQCQfnw1ycf4ZauzjwgkdFZ5nW2zcBgQOOeuXHr3jXhu7xY0l8hM9V1HlSyZNfugwx2LrkBiE7Ok45p6KzU5MINpnJOFmXHtwrGgTXtfp8h8d30XS+nzT3OnJjeqnqJfH1ciIiuyFL5WslYLAjKI4Yq2TQbGFFx643aGtXkLeoZlwd8Z0YqoinmOBLg8UnLcjaNlisG6vm00S+Vsmd+Bc8ecK5jSvlTEj0pq66C2StGGcSs+W5QkJk5PPLc2sdCIyF2D6memDd4WtBsTTYfID9IoFgRKgaElL4qBgGveg=="
+          }
         # print(url)
         data = requests.get(url, headers=headers).json()
         body = data["data"]
