@@ -2,4 +2,5 @@
 
 
 2023年2月6日 直播.py 202行headers中user-agent和Authorization自己抓了替换及可运行
+
 2023年1月17日添加单独运行云宝和金豆兑换链接获取
