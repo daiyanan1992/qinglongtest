@@ -1,6 +1,6 @@
 """
 @Qim出品 仅供学习交流，请在下载后的24小时内完全删除 请勿将任何内容用于商业或非法目的，否则后果自负。
-57Box_0.1
+57Box_0.2
 微信小程序  57Box   玩法：完成基础任务抽免费箱子
 登录微信小程序授权手机号然后下载APP设置密码
 export BOX_data=手机号@密码
@@ -9,30 +9,26 @@ cron： 0 8 * * *
 """
 
 lottery = 1  # 抽鞋盒开关 1开启 0关闭
-
-
-
-
-
-
+from tools.notify import send
 import os
 import time
-from tools.notify import send
+
 import requests
 # from dotenv import load_dotenv
 #
 # load_dotenv()
 accounts = os.getenv("BOX_data")
-# accounts = '16651324444@398104'
 # response = requests.get('https://gitee.com/shallow-a/qim9898/raw/master/label.txt').text
 # print(response)
+
+
+msg = ''
 if accounts is None:
     print('你没有填入BOX_data，咋运行？')
     exit()
-accounts_list = accounts.split('====')
+accounts_list = accounts.split('&')
 num_of_accounts = len(accounts_list)
 print(f"获取到 {num_of_accounts} 个账号")
-msg = ''
 for i, account in enumerate(accounts_list, start=1):
     values = account.split('@')
     mobile, password = values[0], values[1]
@@ -78,7 +74,7 @@ for i, account in enumerate(accounts_list, start=1):
         data = {
             "m": "greatriver_lottery_operation",
             "id": "26",
-            "answer": "228899"
+            "answer": "669988"
         }
         response = requests.post(url, headers=headers, data=data).json()
         state = "进群密码"
@@ -150,20 +146,64 @@ for i, account in enumerate(accounts_list, start=1):
                     complete_prize_title = response['data']['prizes_data'][0]['complete_prize_title']
                     prize_market_price = response['data']['prizes_data'][0]['prize_market_price']
                     print(f"{response['message']}---{complete_prize_title}  市场价:{prize_market_price}")
-                    msg += f"{response['message']}---{complete_prize_title}  市场价:{prize_market_price}\n"
                 elif response['errno'] == 999:
                     print(f"{response['message']}")
                 else:
                     print(f"错误未知{response}")
                     break
             print(f"开鞋盒完毕")
-            # print('===dyyyy===='+msg)
-            send('57box通知',msg)
+            if num >= 1:
+                url = f"https://www.57box.cn/app/index.php?i=2&t=0&v=1&from=wxapp&c=entry&a=wxapp&do=uptaskinfo&&token={token}"
+                data = {
+                    "m": "greatriver_lottery_operation",
+                    "id": "39",
+                    "answer": ""
+                }
+                response = requests.post(url, headers=headers, data=data).json()
+                state = "开盒看视频领矿石"
+                if response['errno'] == 999:
+                    print(f"{state}---{response['message']}")
+                elif response['errno'] == 0:
+                    print(f"{state}---{response['message']}")
+                else:
+                    print(f"{state}错误未知{response}")
+                    break
+            else:
+                print()
+
         elif lottery == 0:
             print(f"{'=' * 12}不执行开鞋盒{'=' * 12}")
+        url = "https://www.57box.cn/app/index.php"
+
+        params = {
+            "i": "2",
+            "t": "0",
+            "v": "1",
+            "from": "wxapp",
+            "c": "entry",
+            "a": "wxapp",
+            "do": "getmemberprizes",
+            "token": token,
+            "m": "greatriver_lottery_operation",
+            "page": "0",
+            "type": "1",
+            "prize_level": "1",
+        }
+
+        response = requests.get(url, headers=headers, params=params).json()
+
+        all_prizes = response['data']
+
+        for prize in all_prizes:
+            prize_title = prize['prize']['complete_prize_title']
+            prizes_count = prize['prizes_count']
+            print(f"{prize_title} 数量:x{prizes_count}")
+            msg += f"Name：{nickname}--{prize_title} 数量:x{prizes_count}\n"
     elif response['errno'] == 999:
         print(f"{response['message']}")
         break
     else:
         print(f"错误未知{response}")
         break
+print(msg)
+send('57box通知',msg)
