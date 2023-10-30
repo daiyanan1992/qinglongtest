@@ -24,8 +24,7 @@ import json
 update:
     2022.10.25 参考大佬 github@QGCliveDavis https://github.com/QGCliveDavis 的 loginAuthCipherAsymmertric 参数解密 新增app登录获取token 完成星播客系列任务 感谢大佬
     2022.11.11 增加分享任务
-    2023.02.03 新增方便获取金豆话费连接，GOLDDATA：除周五的活动id变量名称上午1 2 5 下午1 2 5 按顺序排中间&分隔
-               ZHOUDATA周五活动ID变量 
+    2023年10月30日  添加话费兑换链接，GOLDDATA为acitivityid抓取对应金额的response中的
 """
 from datetime import date, datetime
 from random import shuffle, randint, choices
@@ -151,57 +150,28 @@ class ChinaTelecom:
     def referer(self):
         currentday = calendar.weekday(datetime.now().year, datetime.now().month, datetime.now().day)
         data = get_environ("GOLDDATA")
-        zhoudata = get_environ("ZHOUDATA")
-        # zhoudata = '63b66a5fe7f0643fd094dc59&63b66c2030fa8f3ee7311432&63b66dd281385e2acfd76a85&63b0f2a4b4ac414e589ad295&63b0f2fc195af930e24cc957&63b0f362165ee4785ce3ae2a&63b672fb30fa8f3ee7311443'
-        # data = '63b66f2314e2af076ac5fd06&63b67045195af930e24cccde&63b6714db4ac414e589ad60b&63b66f2314e2af076ac5fd06c&63b67045195af930e24cccdeb&63b6714db4ac414e589ad60ba'
+        # data = '649bd981a663945652d78b7d&649bda03fe92b845afbac20e&649be392c2fec95cb995cafb&649be3d831788756a708f3ea'
         mondata =[]
-        wudata =[]
         data2 = data.split("&")
-        data3 = zhoudata.split("&")
         for i in range(len(data2)):
             mondata.append(data2[i])
-        for i in range(len(data3)):
-            wudata.append(data3[i])
         msg_str = ''
-        if currentday != 4 and datetime.now().hour > 0 and datetime.now().hour < 11:
+        if currentday != '4' and datetime.now().hour > 0 and datetime.now().hour < 11:
             print('+++++++' + self.phone + '+++++++')
             print(
-                f'上午场一元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[0]}')
+                f'上午场二十元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[0]}')
             print(
-                f'上午场两元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[1]}')
-            print(
-                f'上午场五元元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[2]}')
-            msg_str += f'{self.phone}\n上午场一元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[0]}' + f'\n上午场两元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[1]}' + f'\n上午场五元元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[2]}'
-        elif currentday != 4 and datetime.now().hour >= 11:
+                f'上午场十元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[1]}')
+            msg_str += f'{self.phone}\n上午场二十元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[0]}' + f'\n上午场十元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[1]}'
+        elif currentday != '4' and datetime.now().hour >= 11:
             print('+++++++' + self.phone + '+++++++')
             print(
-                f'下午场一元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[3]}')
+                f'下午场一元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[2]}')
             print(
-                f'下午场两元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[4]}')
-            print(
-                f'下午场五元元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[5]}')
-            msg_str += f'{self.phone}\n下午场一元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[3]}' + f'\n下午场两元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[4]}' + f'\n下午场五元元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[5]}'
-        elif currentday == 4 and datetime.now().hour > 0 and datetime.now().hour < 11:
-            print('+++++++' + self.phone + '+++++++')
-            print(
-                f'周五上午场二元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={wudata[0]}')
-            print(
-                f'周五上午场五元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={wudata[1]}')
-            print(
-                f'周五上午场十元元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={wudata[2]}')
-            msg_str += f'{self.phone}\n周五上午场二元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={wudata[0]}' + f'\n周五上午场五元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={wudata[1]}' + f'\n周五上午场十元元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={wudata[2]}'
-        elif currentday == 4 and datetime.now().hour >= 11:
-            print('+++++++' + self.phone + '+++++++')
-            print(
-                f'周五下午场一元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={wudata[3]}')
-            print(
-                f'周五下午场二元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={wudata[4]}')
-            print(
-                f'周五下午场五元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={wudata[5]}')
-            print(
-                f'周五下午场十元元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={wudata[6]}')
-            msg_str += f'{self.phone}\n周五下午场一元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={wudata[3]}' + f'周五上午场二元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={wudata[4]}' + f'\n周五上午场五元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={wudata[5]}' + f'\n周五上午场十元元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={wudata[6]}'
-
+                f'下午场两元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[3]}')
+            msg_str += f'{self.phone}\n下午场一元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[2]}' + f'\n下午场两元抢购连接：https://wapact.189.cn:9001/JinDouMall/JinDouMall_independentDetails.html?ticket={self.ticket}&activitieId={mondata[3]}'
+        elif currentday == '4':
+            print_now('周五场,自己抓~~~,')
         print('链接获取成功')
         send('获取兑换链接通知', msg_str)
 
@@ -231,7 +201,7 @@ class ChinaTelecom:
 # TELECOM       13311111111@111111@10&13322222222@222222@10
 if __name__ == "__main__":
     TELECOM = get_environ("TELECOM1")
-    # TELECOM = '18118663878@@10'
+    
     users = TELECOM.split("&")
     for i in range(len(users)):
         user = users[i].split("@")
