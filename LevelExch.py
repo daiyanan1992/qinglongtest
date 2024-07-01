@@ -186,8 +186,8 @@ class ChinaTelecom:
 # 主方法与源文件不同；增加了多账号的判断；变量格式如下
 # TELECOM       13311111111@111111@10&13322222222@222222@10
 if __name__ == "__main__":
-    # TELECOM = get_environ("chinaTelecomAccount")
-    TELECOM = '15862861904#398104'
+    TELECOM = get_environ("chinaTelecomAccount")
+    #TELECOM = '158222224#398104'
     users = TELECOM.split("&")
     for i in range(len(users)):
         user = users[i].split("#")
