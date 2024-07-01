@@ -35,6 +35,7 @@ from tools.tool import timestamp, get_environ, print_now
 from tools.send_msg import push
 from login.telecom_login import TelecomLogin
 from string import ascii_letters, digits
+from tools.notify import send
 
 
 class ChinaTelecom:
@@ -106,7 +107,10 @@ class ChinaTelecom:
             "para": self.telecom_encrypt(f'{{"phone":{self.phone}}}')
         }
         data = self.req(url, "POST", body)
-        self.level = int(data["userInfo"]["paradiseDressup"]["level"]
+        self.level = int(data["userInfo"]["paradiseDressup"]["level"])
+        # if self.level < 5:
+        #     print_now("当前等级小于5级 不领取等级权益")
+        #     return
         url = "https://wapside.189.cn:9001/jt-sign/paradise/getLevelRightsList"
         right_list = self.req(url, "POST", body)[f"V{self.level}"]
         for data in right_list:
@@ -159,11 +163,16 @@ class ChinaTelecom:
         self.init()
         for i in range(100):
             try:
-                self.get_level()
+                data = self.get_level()
+                if data["resoultCode"] == "0":
+                    msg = f'{self.phone}==抢购成功'
+                    send('抢购通知', msg)
+                    break
             except Exception as e:
                 print(f"请求发送失败: " + str(e))
-                sleep(6)
+                # sleep(6)
                 continue
+
             # print_now(data)
             # if data["code"] == "0":
             #     break
@@ -177,24 +186,20 @@ class ChinaTelecom:
 # 主方法与源文件不同；增加了多账号的判断；变量格式如下
 # TELECOM       13311111111@111111@10&13322222222@222222@10
 if __name__ == "__main__":
-    TELECOM = get_environ("TELECOM")
-    # TELECOM = '18522878@398104@10&12288878@398104@10'
+    # TELECOM = get_environ("chinaTelecomAccount")
+    TELECOM = '15862861904#398104'
     users = TELECOM.split("&")
     for i in range(len(users)):
-        user = users[i].split("@")
+        user = users[i].split("#")
         phone = user[0]
         password = user[1]
-        foods = int(float(user[2]))
-        print(phone, password, foods)
+
+        print(phone, password)
         if phone == "":
             exit(0)
         if password == "":
             print_now("电信服务密码未提供 只执行部分任务")
 
-        if datetime.now().hour + (8 - int(strftime("%z")[2])) == 12:
-            telecom = ChinaTelecom(phone, password, False)
-            telecom.init()
-            telecom.convert_reward()
         else:
             telecom = ChinaTelecom(phone, password)
             telecom.main()
