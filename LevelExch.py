@@ -106,10 +106,7 @@ class ChinaTelecom:
             "para": self.telecom_encrypt(f'{{"phone":{self.phone}}}')
         }
         data = self.req(url, "POST", body)
-        self.level = int(data["userInfo"]["paradiseDressup"]["level"])
-        if self.level < 5:
-            print_now("当前等级小于5级 不领取等级权益")
-            return
+        self.level = int(data["userInfo"]["paradiseDressup"]["level"]
         url = "https://wapside.189.cn:9001/jt-sign/paradise/getLevelRightsList"
         right_list = self.req(url, "POST", body)[f"V{self.level}"]
         for data in right_list:
