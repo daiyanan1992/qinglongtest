@@ -10,3 +10,5 @@
 2024年7月1日云宝兑换
 
 2024年7月24日windows单独云宝兑换   仅需要抓取你的ticket填入即可提前30s无限运行
+![image](https://github.com/user-attachments/assets/0eae1460-88e5-4794-912c-9ed158976b24)
+
