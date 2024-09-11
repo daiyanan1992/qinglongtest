@@ -25,6 +25,7 @@ update:
 from datetime import date, datetime
 from random import shuffle, randint, choices
 from time import sleep, strftime
+import time
 from re import findall
 import requests
 from requests import get, post
@@ -91,87 +92,48 @@ class ChinaTelecom:
                 encrypt_text += RSA_Encrypt(self.key).encrypt(split_text)
             return encrypt_text
 
-    @staticmethod
-    def geneRandomToken():
-        randomList = choices(ascii_letters + digits, k=129)
-        token = f"V1.0{''.join(x for x in randomList)}"
-        return token
 
 
 
 
-    # 查询宠物等级
-    def get_level(self):
-        url = "https://wapside.189.cn:9001/jt-sign/paradise/getParadiseInfo"
-        body = {
-            "para": self.telecom_encrypt(f'{{"phone":{self.phone}}}')
-        }
-        data = self.req(url, "POST", body)
-        self.level = int(data["userInfo"]["paradiseDressup"]["level"])
-        # if self.level < 5:
-        #     print_now("当前等级小于5级 不领取等级权益")
-        #     return
-        url = "https://wapside.189.cn:9001/jt-sign/paradise/getLevelRightsList"
-        right_list = self.req(url, "POST", body)[f"V{self.level}"]
-        for data in right_list:
-            # print(dumps(data, indent=2, ensure_ascii=0))
-            if "话费" in data["righstName"]:
-                rightsId = data["id"]
-                self.level_ex(rightsId)
-                continue
-        # print(self.rightsId)
+
 
     # 每月领取等级金豆
-    def level_ex(self, rightsId):
+    def level_ex(self,rightsId):
         # self.get_level()
+        now = datetime.now().strftime('%H:%M:%S.%f')
         url = "https://wapside.189.cn:9001/jt-sign/paradise/conversionRights"
         data = {
             "para": self.telecom_encrypt(f'{{"phone":{self.phone},"rightsId":"{rightsId}"}},"receiveCount":1')
         }
 
         resp = self.req(url, "POST", data)
-        print_now(resp)
+        print_now(f'{now}--Phone:{self.phone}--{resp}')
 
 
-    def author(self):
-        """
-        通过usercode 获取 authorization
-        :return:
-        """
-        self.get_usercode()
-        url = "https://xbk.189.cn/xbkapi/api/auth/userinfo/codeToken"
-        data = {
-            "usercode": self.usercode
-        }
-        data = post(url, headers=self.headers_live, json=data).json()
-        self.authorization = f"Bearer {data['data']['token']}"
-        self.headers_live["Authorization"] = self.authorization
-
-
-
-    def get_userid(self):
-        url = "https://wapside.189.cn:9001/jt-sign/api/home/homeInfo"
-        body = {
-            "para": self.telecom_encrypt(
-                f'{{"phone":"{self.phone}","signDate":"{datetime.now().__format__("%Y-%m")}"}}')
-        }
-        userid = post(url, json=body).json()["data"]["userInfo"]["userThirdId"]
-        return userid
 
 
     def main(self):
         self.init()
-        for i in range(100):
+        now = datetime.now().strftime('%H:%M:%S.%f')
+        #六级
+        rightsId = '38485966b5ff4360931f41b64fd8d517'
+        #五级
+        # rightsId = '0bea825669ee4a2dbf8ac32241b96856'
+        start_time = time.time()
+        while 1==1:
+            current_time = time.time()
             try:
-                data = self.get_level()
-                if data["resoultCode"] == "0":
-                    msg = f'{self.phone}==抢购成功'
-                    send('抢购通知', msg)
-                    break
+                data = self.level_ex(rightsId)
             except Exception as e:
                 print(f"请求发送失败: " + str(e))
-                # sleep(6)
+                    #     # sleep(6)
                 continue
+            elapsed_time = current_time - start_time
+            if elapsed_time >= 200:  # 5分钟是300秒
+                break
+            # for i in range(100):
+
 
             # print_now(data)
             # if data["code"] == "0":
@@ -186,8 +148,9 @@ class ChinaTelecom:
 # 主方法与源文件不同；增加了多账号的判断；变量格式如下
 # TELECOM       13311111111@111111@10&13322222222@222222@10
 if __name__ == "__main__":
+    requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += 'HIGH:!DH:!aNULL'
     TELECOM = get_environ("chinaTelecomAccount")
-    #TELECOM = '158222224#398104'
+    
     users = TELECOM.split("&")
     for i in range(len(users)):
         user = users[i].split("#")
