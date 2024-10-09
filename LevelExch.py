@@ -17,6 +17,8 @@
              task 后边是脚本所在目录/china_telecom.py conc TELECOM
 3. 必须登录过 电信营业厅 app的账号才能正常运行
 """
+import json
+
 """
 update:
     2022.10.25 参考大佬 github@QGCliveDavis https://github.com/QGCliveDavis 的 loginAuthCipherAsymmertric 参数解密 新增app登录获取token 完成星播客系列任务 感谢大佬
@@ -33,10 +35,23 @@ from base64 import b64encode
 from tools.aes_encrypt import AES_Ctypt
 from tools.rsa_encrypt import RSA_Encrypt
 from tools.tool import timestamp, get_environ, print_now
-from tools.send_msg import push
 from login.telecom_login import TelecomLogin
 from string import ascii_letters, digits
 from tools.notify import send
+
+
+data = {}
+try:
+    with open('权益id.log') as fr:
+        data = eval(fr.read())
+except:
+    with open('权益id.log', 'w') as f:
+        pass
+
+yf = datetime.now().strftime("%Y%m")
+dd = datetime.now().strftime("%d")
+# dd = '01'
+
 
 
 class ChinaTelecom:
@@ -49,14 +64,13 @@ class ChinaTelecom:
             self.ticket = userLoginInfo[0]
             self.token = userLoginInfo[1]
 
-
-    def getSign(self,tick):
+    def getSign(self, tick):
         url = "https://wapside.189.cn:9001/jt-sign/ssoHomLogin"
 
         data = {'ticket': f'{tick}'}
-        resp = get(url=url,params=data).json()
+        resp = get(url=url, params=data).json()
         sign = resp["sign"]
-        print(sign)
+        # print(sign)
         return sign
 
     def init(self):
@@ -93,13 +107,33 @@ class ChinaTelecom:
             return encrypt_text
 
 
+    def get_level(self):
+
+        url = "https://wapside.189.cn:9001/jt-sign/paradise/getLevelRightsList"
+        body = {
+            "para": self.telecom_encrypt(f'{{"phone":{self.phone}}}')
+        }
 
 
+        rightsId = ''
+        levelStr = ['V4','V5','V6']
+        for str in levelStr:
+            right_list = self.req(url, "POST", body)[f"{str}"]
+            for data in right_list:
+                # print(dumps(data, indent=2, ensure_ascii=0))
+                if "话费" in data["righstName"]:
+                    rightsId += f'{data["id"]}#'
+
+        print(rightsId)
+        return rightsId
+            # print(f'等级返回：{data}')
+
+        # print(self.rightsId)
 
 
 
     # 每月领取等级金豆
-    def level_ex(self,rightsId):
+    def level_ex(self, rightsId):
         # self.get_level()
         now = datetime.now().strftime('%H:%M:%S.%f')
         url = "https://wapside.189.cn:9001/jt-sign/paradise/conversionRights"
@@ -111,38 +145,51 @@ class ChinaTelecom:
         print_now(f'{now}--Phone:{self.phone}--{resp}')
 
 
+    def getId(self):
+        # global data
+        if yf not in data:
+            data[yf] = {}
+
+            str1 = self.get_level()
+            str2 = str1.split('#')
+            # print(str2)
+            for i in range(0, 3):
+                data[yf][f'{i + 4}'] = str2[i]
 
 
-    def main(self):
+
+
+
+
+
+    def main(self,level):
+        global data
         self.init()
-        now = datetime.now().strftime('%H:%M:%S.%f')
-        #六级
-        rightsId = '38485966b5ff4360931f41b64fd8d517'
-        #五级
-        # rightsId = '0bea825669ee4a2dbf8ac32241b96856'
-        start_time = time.time()
-        while 1==1:
-            current_time = time.time()
-            try:
-                data = self.level_ex(rightsId)
-            except Exception as e:
-                print(f"请求发送失败: " + str(e))
+        if dd == '01':
+            self.getId()
+            with open('权益id.log', 'w') as f:
+                f.write(json.dumps(data))
+        else:
+            # now = datetime.now().strftime('%H:%M:%S.%f')
+            # 六级
+            # rightsId = 'c50d38e5ab9a4288b89d751357738408'
+            rightsId = data[yf][level]
+            print(rightsId)
+            start_time = time.time()
+            while 1 == 1:
+                current_time = time.time()
+                try:
+                    data = self.level_ex(rightsId)
+                except Exception as e:
+                    print(f"请求发送失败: " + str(e))
                     #     # sleep(6)
-                continue
-            elapsed_time = current_time - start_time
-            if elapsed_time >= 200:  # 5分钟是300秒
-                break
-            # for i in range(100):
-
-
-            # print_now(data)
-            # if data["code"] == "0":
-            #     break
+                    continue
+                elapsed_time = current_time - start_time
+                if elapsed_time >= 200:  # 5分钟是300秒
+                    break
         print('========================================================')
         print('============================分隔符=======================')
         print('========================================================')
-
-  
 
 
 # 主方法与源文件不同；增加了多账号的判断；变量格式如下
@@ -150,12 +197,13 @@ class ChinaTelecom:
 if __name__ == "__main__":
     requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += 'HIGH:!DH:!aNULL'
     TELECOM = get_environ("chinaTelecomAccount")
-    
+    # TELECOM = '18751355555#322224#4'
     users = TELECOM.split("&")
     for i in range(len(users)):
         user = users[i].split("#")
         phone = user[0]
         password = user[1]
+        levelid = user[2]
 
         print(phone, password)
         if phone == "":
@@ -165,4 +213,4 @@ if __name__ == "__main__":
 
         else:
             telecom = ChinaTelecom(phone, password)
-            telecom.main()
+            telecom.main(levelid)
