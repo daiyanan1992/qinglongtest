@@ -13,10 +13,10 @@ from xml.etree.ElementTree import XML
 from uuid import uuid4
 from sys import path
 if "telecom_login" in __file__:
-    path.append("../tools")
-    from rsa_encrypt import RSA_Encrypt
-    from encrypt_symmetric import Crypt
-    from tool import print_now
+    path.append("..")
+    from tools.rsa_encrypt import RSA_Encrypt
+    from tools.encrypt_symmetric import Crypt
+    # from tool import print_now
 else:
     from tools.rsa_encrypt import RSA_Encrypt
     from tools.tool import print_now
