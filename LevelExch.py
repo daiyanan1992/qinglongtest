@@ -25,25 +25,26 @@ update:
     2022.11.11 增加分享任务
 """
 from datetime import date, datetime
-from random import shuffle, randint, choices
-from time import sleep, strftime
+
 import time
-from re import findall
+
 import requests
 from requests import get, post
 from base64 import b64encode
-from tools.aes_encrypt import AES_Ctypt
+
 from tools.rsa_encrypt import RSA_Encrypt
 from tools.tool import timestamp, get_environ, print_now
 from login.telecom_login import TelecomLogin
-from string import ascii_letters, digits
-from tools.notify import send
+
 
 
 data = {}
+dirsize = 0
 try:
     with open('权益id.log') as fr:
-        data = eval(fr.read())
+        data1 = fr.read()
+        dirsize = len(data1)
+        data = eval(data1)
 except:
     with open('权益id.log', 'w') as f:
         pass
@@ -164,15 +165,14 @@ class ChinaTelecom:
 
     def main(self,level):
         global data
+        global dirsize
         self.init()
-        if dd == '01':
+        if dd == '01' or dirsize == 0:
             self.getId()
             with open('权益id.log', 'w') as f:
                 f.write(json.dumps(data))
+            print('再跑一次脚本')
         else:
-            # now = datetime.now().strftime('%H:%M:%S.%f')
-            # 六级
-            # rightsId = 'c50d38e5ab9a4288b89d751357738408'
             rightsId = data[yf][level]
             print(rightsId)
             start_time = time.time()
@@ -196,8 +196,8 @@ class ChinaTelecom:
 # TELECOM       13311111111@111111@10&13322222222@222222@10
 if __name__ == "__main__":
     requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += 'HIGH:!DH:!aNULL'
-    TELECOM = get_environ("chinaTelecomAccount")
-    # TELECOM = '18751355555#322224#4'
+    # TELECOM = get_environ("chinaTelecomAccount")
+    TELECOM = '18888888888#398104#5'
     users = TELECOM.split("&")
     for i in range(len(users)):
         user = users[i].split("#")
