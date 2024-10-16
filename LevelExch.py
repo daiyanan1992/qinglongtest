@@ -172,21 +172,21 @@ class ChinaTelecom:
             with open('权益id.log', 'w') as f:
                 f.write(json.dumps(data))
             print('再跑一次脚本')
-        else:
-            rightsId = data[yf][level]
-            print(rightsId)
-            start_time = time.time()
-            while 1 == 1:
-                current_time = time.time()
-                try:
-                    data = self.level_ex(rightsId)
-                except Exception as e:
-                    print(f"请求发送失败: " + str(e))
-                    #     # sleep(6)
-                    continue
-                elapsed_time = current_time - start_time
-                if elapsed_time >= 200:  # 5分钟是300秒
-                    break
+        rightsId = data[yf][level]
+        print(rightsId)
+        start_time = time.time()
+        while 1 == 1:
+            current_time = time.time()
+            try:
+                data = self.level_ex(rightsId)
+            except Exception as e:
+                print(f"请求发送失败: " + str(e))
+                #     # sleep(6)
+                continue
+            elapsed_time = current_time - start_time
+            if elapsed_time >= 200:  # 5分钟是300秒
+                break
+
         print('========================================================')
         print('============================分隔符=======================')
         print('========================================================')
