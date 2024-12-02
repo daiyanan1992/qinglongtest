@@ -442,10 +442,10 @@ def main():
         print("瑞数加密已关闭")
         rs = 0
     if os.environ.get('chinaTelecomAccount') != None:
-        chinaTelecomAccount = os.environ.get('jdhf')
+        chinaTelecomAccount = os.environ.get('chinaTelecomAccount')
     else:
-        chinaTelecomAccount = jdhf
-    chinaTelecomAccount = '18811118888@111111@6'
+        print('添加chinaTelecomAccount环境变量啊')
+    # chinaTelecomAccount = '18811118888@111111@6'
 
     for i in chinaTelecomAccount.split('&'):
 
