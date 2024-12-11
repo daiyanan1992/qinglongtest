@@ -95,38 +95,44 @@ dd = datetime.datetime.now().strftime("%d")
 # dd = '01'
 
 
-def getId(phone,ck):
+def getId(phone,ck,session):
     # global data
     if yf not in data:
         data[yf] = {}
 
-        str1 = get_level(phone,ck)
+        str1 = get_level(phone,ck,session)
         str2 = str1.split('#')
         # print(str2)
         for i in range(0, 3):
             data[yf][f'{i + 4}'] = str2[i]
 
-def get_level(phone,ck):
-    url = "https://wapside.189.cn:9001/jt-sign/paradise/getLevelRightsList"
-    body = {"para": encrypt_para(f'{{"phone":{phone}}}')}
-    right_list = requests.post("https://wapside.189.cn:9001/jt-sign/paradise/getLevelRightsList", json=body,
-                               cookies=ck).text
-    right_list_json = json.loads(right_list)
-    rightsId = ''
-    levelStr = ['V4','V5','V6']
+def get_level(phone,ck,session):
+    try:
+        bd = js.call('main').split('=')
+        ck[bd[0]] = bd[1]
 
-    for str in levelStr:
-        # right_list = self.req(url, "POST", body)[f"{str}"]
-        # right_list = requests.post("https://wapside.189.cn:9001/jt-sign/paradise/getLevelRightsList",json=body,cookies=ck).json()
-        # printn(right_list[f'{str}'])
-        right_list1 = right_list_json[f'{str}']
-        for data in right_list1:
-            # print(dumps(data, indent=2, ensure_ascii=0))
-            if "话费" in data["righstName"]:
-                rightsId += f'{data["id"]}#'
+        body = {"para": encrypt_para(f'{{"phone":{phone}}}')}
+        str1  = session.post("https://wapside.189.cn:9001/jt-sign/paradise/getLevelRightsList", json=body,
+                                   cookies=ck).text
+        right_list_json = json.loads(str1)
+        printn(right_list_json)
+        rightsId = ''
+        levelStr = ['V4','V5','V6']
 
-    print(rightsId)
-    return rightsId
+        for str in levelStr:
+            # right_list = self.req(url, "POST", body)[f"{str}"]
+            # right_list = requests.post("https://wapside.189.cn:9001/jt-sign/paradise/getLevelRightsList",json=body,cookies=ck).json()
+            # printn(right_list[f'{str}'])
+            right_list1 = right_list_json[f'{str}']
+            for data in right_list1:
+                # print(dumps(data, indent=2, ensure_ascii=0))
+                if "话费" in data["righstName"]:
+                    rightsId += f'{data["id"]}#'
+
+        print(rightsId)
+        return rightsId
+    except Exception as e:
+        print(e)
 
 
 wxp = {}
@@ -360,26 +366,19 @@ def ks(phone, ticket,level, uid):
 
 
         if rs:
-            # bd = js.call('main').split('=')
-            # ck[bd[0]] = bd[1]
-            # response_data = s.get('https://wapside.189.cn:9001/jt-sign/ssoHomLogin?ticket=' + ticket, cookies=ck).json()['sign']
-            # new_header = {
-            #     "User-Agent": f"CtClient;9.6.1;Android;12;SM-G9860;{base64.b64encode(phone[5:11].encode()).decode().strip('=+')}!#!{base64.b64encode(phone[0:5].encode()).decode().strip('=+')}",
-            #     "Referer": "https://wapside.189.cn:9001/resources/dist/signInActivity.html",
-            #     "sign":response_data}
-            # s.headers.update(new_header)
-            if dd == '01' or dirsize == 0:
-                getId(phone,ck)
-                with open('权益id.log', 'w') as f:
-                    f.write(json.dumps(data))
-                print('再跑一次脚本')
-            rightsId = data[yf][level]
             sign = getSign(ticket, s)
             new_header = {
                 "User-Agent": f"CtClient;9.6.1;Android;12;SM-G9860;{base64.b64encode(phone[5:11].encode()).decode().strip('=+')}!#!{base64.b64encode(phone[0:5].encode()).decode().strip('=+')}",
                 "Referer": "https://wapside.189.cn:9001/resources/dist/signInActivity.html",
                 "sign": sign}
             s.headers.update(new_header)
+            if dd == '01' or dirsize == 0:
+                getId(phone,ck,s)
+                with open('权益id.log', 'w') as f:
+                    f.write(json.dumps(data))
+                print('再跑一次脚本')
+            rightsId = data[yf][level]
+
             start_time = time.time()
             while 1 == 1:
                 current_time = time.time()
@@ -445,11 +444,10 @@ def main():
         chinaTelecomAccount = os.environ.get('chinaTelecomAccount')
     else:
         print('添加chinaTelecomAccount环境变量啊')
-    # chinaTelecomAccount = '18811118888@111111@6'
 
     for i in chinaTelecomAccount.split('&'):
 
-        i = i.split('@')
+        i = i.split('#')
         phone = i[0]
         password = i[1]
         level = i[2]
