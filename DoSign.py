@@ -363,7 +363,7 @@ def food(phone, session):
         bd = js.call('main').split('=')
         ck[bd[0]] = bd[1]
         ll, jy = getParadiseInfo(phone, session)
-        if jy < 14500:
+        if jy < 14700:
             bd = js.call('main').split('=')
             ck[bd[0]] = bd[1]
             url = "https://wapside.189.cn:9001/jt-sign/paradise/food"
@@ -382,16 +382,28 @@ from tools.aes_encrypt import AES_Ctypt
 
 
 # 签到
-def chech_in(phone, session, ck):
-    url = "https://wapside.189.cn:9001/jt-sign/api/home/sign"
-    time1 = int(round(time.time() * 1000))
-    data = {
-        "encode": AES_Ctypt("34d7cb0bcdf07523").encrypt(
-            f'{{"phone":{phone},"date":{time1},"signSource":"smlprgrm"}}')
-    }
-    response = session.post(url, json=data, cookies=ck)
-    printn(f'=={phone[-4:]}==' + response.text)
-    # printn(type(response.text))
+def chech_in(phone, session):
+    try:
+        bd = js.call('main').split('=')
+        ck[bd[0]] = bd[1]
+        url = "https://wapside.189.cn:9001/jt-sign/api/home/sign"
+        time1 = int(round(time.time() * 1000))
+        data = {
+            "encode": AES_Ctypt("34d7cb0bcdf07523").encrypt(
+                f'{{"phone":{phone},"date":{time1},"signSource":"smlprgrm"}}')
+        }
+        response = session.post(url, json=data, cookies=ck)
+        printn(f'=chech_in={phone[-4:]}==' + response.text)
+        resp = json.loads(response.text)
+        if resp["resoultCode"] == '0':
+            printn(f'=={phone[:3]}***{phone[-4:]}连续签到成功\n')
+            return f'=chech_in={phone[:3]}***{phone[-4:]}连续签到成功\n'
+        else:
+            printn('签到失败\n')
+            return 'chech_in签到失败\n'
+    except Exception as e:
+        print(e)
+
     '''
     {"resoultCode":"0","data":{"next":{"signSource":"","signTime":"","iSeven":"","id":"","state":"","specialFlag":"","userId":"","flow":0,"coin":100},"msg":"签到成功","signSource":"smlprgrm","code":1,"continuousDay":1,"currentDate":1733131397963,"type":"firstSign","userId":"2022072000057809098","flow":0,"coin":120,"totalDay":1},"resoultMsg":"成功"}
     '''
@@ -399,20 +411,37 @@ def chech_in(phone, session, ck):
 
 # {'resoultCode': 0, 'data': {'continuousDay': 1, 'signDay': 1, 'reStatus': 0, 'isSign': 1, 'isSeven': False}, 'resoultMsg': '请求成功'}
 def userStatusInfo(phone, session):
+    msgstr = ''
     try:
         bd = js.call('main').split('=')
         ck[bd[0]] = bd[1]
         url = "https://wapside.189.cn:9001/jt-sign/api/home/userStatusInfo"
         data = {"para": encrypt_para(f'{{"phone":{phone}}}')}
         response = session.post(url, json=data, cookies=ck)
-        printn(f'=={phone[-4:]}==' + response.text)
+        printn(f'=userStatusInfo={phone[-4:]}==' + response.text)
         resp = json.loads(response.text)
-        if resp["resoultCode"] == 0:
-            printn(
-                f'=={phone[:3]}***{phone[-4:]}连续签到{resp["data"]["continuousDay"]}天=当前签到{resp["data"]["signDay"]}天=\n')
-            return f'=={phone[:3]}***{phone[-4:]}连续签到{resp["data"]["continuousDay"]}天=当前签到{resp["data"]["signDay"]}天='
+        if resp["resoultCode"] == 0 and resp["data"]["isSign"] != 1:
+            msgstr += chech_in(phone,session)
+            msgstr += f'=userStatusInfo={phone[-4:]}==已签到{resp["data"]["continuousDay"]}天\n'
+        elif resp["data"]["isSeven"]:
+            msgstr +=exchangePrize(phone, 7, session)
         else:
-            return '签到失败\n'
+            msgstr +=f'=userStatusInfo={phone[-4:]}==已签到{resp["data"]["continuousDay"]}天\n'
+        return msgstr
+        # if resp["resoultCode"] == 0:
+        #     if resp["data"]["isSign"] == 0:
+        #         chech_in(phone,session)
+        #         # printn(str2)
+        #         # return str2
+        #     else:
+        #         # return f'=={phone[-4:]}已签到'
+        #         printn(f'=={phone[-4:]}已签到')
+        # if resp["data"]["isSeven"]:
+        #     str1 = exchangePrize(phone,7,session)
+        #     printn(str1)
+        # else:
+        #     # return '查询失败\n'
+        #     printn('查询失败\n')
 
     except Exception as e:
         print(e)
@@ -425,7 +454,7 @@ def continueSignDays(phone, session):
         url = "https://wapside.189.cn:9001/jt-sign/webSign/continueSignDays"
         data = {"para": encrypt_para(f'{{"phone":{phone}}}')}
         response = session.post(url, json=data, cookies=ck)
-        printn(f'=={phone[-4:]}==' + response.text)
+        printn(f'=continueSignDays={phone[-4:]}==' + response.text)
         resp = json.loads(response.text)
         # {'continueSignDays': 1, 'resoultCode': '0', 'level': 6}
         if resp['resoultCode'] == '0':
@@ -433,19 +462,45 @@ def continueSignDays(phone, session):
             if resp["continueSignDays"] == 7:
                 str1 = exchangePrize(phone, 7, session)
                 return str1
-            elif resp["continueSignDays"] == 15:
-                str1 = exchangePrize(phone, 15, session)
-                return str1
-            elif resp["continueSignDays"] == 28:
-                str1 = exchangePrize(phone, 28, session)
-                return str1
+            # elif resp["continueSignDays"] == 15:
+            #     str1 = exchangePrize(phone, 15, session)
+            #     return str1
+            # elif resp["continueSignDays"] == 28:
+            #     str1 = exchangePrize(phone, 28, session)
+            #     return str1
             else:
-                printn('查询抽奖天数失败')
-                return '查询抽奖天数失败\n'
+                printn(f'=continueSignDays={phone[-4:]}未到7天抽奖')
+                return f'=continueSignDays={phone[-4:]}未到7天抽奖\n'
 
     except Exception as e:
         print(e)
+        return e
 
+
+# {"resoultCode":0,"continue15List":[],"continue28List":[],"resoultMsg":"查询成功"}
+#{"resoultCode":0,"continue15List":[{"updateDate":{"date":15,"hours":8,"seconds":44,"month":0,"timezoneOffset":-480,"year":125,"minutes":1,"time":1736899304000,"day":3},"month":"202501","phone":"18552988878","id":6560172,"type":15,"createDate":{"date":15,"hours":8,"seconds":44,"month":0,"timezoneOffset":-480,"year":125,"minutes":1,"time":1736899304000,"day":3},"status":0}],"continue28List":[],"resoultMsg":"查询成功"}
+def continueSignRecords(phone,session):
+    try:
+        bd = js.call('main').split('=')
+        ck[bd[0]] = bd[1]
+        url = "https://wapside.189.cn:9001/jt-sign/webSign/continueSignRecords"
+        data = {"para": encrypt_para(f'{{"phone":{phone}}}')}
+        response = session.post(url, json=data, cookies=ck)
+        printn(f'=continueSignRecords={phone[-4:]}==' + response.text)
+        resp = json.loads(response.text)
+        if resp["resoultCode"] == 0:
+            if len(resp["continue15List"]) > 0:
+                str1 = exchangePrize(phone,15,session)
+                return str1
+            elif len(resp["continue28List"]) > 0:
+                str2 = exchangePrize(phone,28,session)
+                return str2
+            else:
+                return f'=continueSignRecords={phone[-4:]}未到15/28抽奖天数\n'
+
+    except Exception as e:
+        print(e)
+        return e
 
 # 抽奖
 def exchangePrize(phone, cd, session):
@@ -457,17 +512,18 @@ def exchangePrize(phone, cd, session):
         str1 = session.post(url, json=data, cookies=ck).text
         resp = json.loads(str1)
         printn(resp)
-        if resp["resoultCode"] == 0:
+        result_code = resp.get('resoultCode')
+        if result_code == 0:
             if resp["prizeDetail"]["code"] ==0:
                 printn(f'连签{cd}天，奖品：{resp["prizeDetail"]["biz"]["title"]}\n')
                 return f'连签{cd}天，奖品：{resp["prizeDetail"]["biz"]["title"]}\n'
             else:
                 printn('连签内容好像有问题')
-                return '连签内容好像有问题\n'
+                return '连签已抽奖！\n'
 
-        else:
+        elif result_code is None:
             printn('连签抽奖好像不对劲')
-            return '连签抽奖好像不对劲\n'
+            return '连签已抽奖！\n'
     except Exception as e:
         print(e)
 
@@ -509,13 +565,17 @@ def ks(phone, ticket, uid):
                 "Referer": "https://wapside.189.cn:9001/resources/dist/signInActivity.html",
                 "sign": sign}
             s.headers.update(new_header)
-            chech_in(phone,s,ck)
+            # chech_in(phone,s,ck)
             for i in range(10):
                 food(phone, s)
+                time.sleep(1)
             msg +=userStatusInfo(phone,s)
+            msg +=continueSignRecords(phone,s)
             ll,jy = getParadiseInfo(phone,s)
-            msg +=f'云宝等级：{ll},经验值：{jy}\n'
+            msg +=f'{phone[-4:]}:云宝等级：{ll},经验值：{jy}\n'
             msg +=continueSignDays(phone, s)
+            msg +=userStatusInfo(phone,s)
+            msg +='===========分隔=============\n'
             printn(msg)
 
     else:
@@ -567,7 +627,7 @@ def main():
         chinaTelecomAccount = os.environ.get('chinaTelecomAccount')
     else:
         printn('填写环境变量chinaTelecomAccount')
-    
+
 
     for i in chinaTelecomAccount.split('&'):
 
