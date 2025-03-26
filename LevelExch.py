@@ -95,22 +95,27 @@ dd = datetime.datetime.now().strftime("%d")
 # dd = '01'
 
 
-def getId(phone,ck,session):
+def getId(phone,ck,session,ticket):
     # global data
     if yf not in data:
         data[yf] = {}
 
-        str1 = get_level(phone,ck,session)
+        str1 = get_level(phone,ck,ticket,session)
         str2 = str1.split('#')
         # print(str2)
         for i in range(0, 3):
             data[yf][f'{i + 4}'] = str2[i]
 
-def get_level(phone,ck,session):
+def get_level(phone,ck,ticket,session):
     try:
         bd = js.call('main').split('=')
         ck[bd[0]] = bd[1]
-
+        sign = getSign(ticket, session)
+        new_header = {
+            "User-Agent": f"CtClient;9.6.1;Android;12;SM-G9860;{base64.b64encode(phone[5:11].encode()).decode().strip('=+')}!#!{base64.b64encode(phone[0:5].encode()).decode().strip('=+')}",
+            "Referer": "https://wapside.189.cn:9001/resources/dist/signInActivity.html",
+            "sign": sign}
+        session.headers.update(new_header)
         body = {"para": encrypt_para(f'{{"phone":{phone}}}')}
         str1  = session.post("https://wapside.189.cn:9001/jt-sign/paradise/getLevelRightsList", json=body,
                                    cookies=ck).text
@@ -313,14 +318,17 @@ def getSign(ticket,session):
     try:
         bd = js.call('main').split('=')
         ck[bd[0]] = bd[1]
-
-        response_data = session.get('https://wapside.189.cn:9001/jt-sign/ssoHomLogin?ticket=' + ticket, cookies=ck).json()[
-            'sign']
-
-        print(response_data)
-        return response_data
+        response_data = session.get('https://wappark.189.cn/jt-sign/ssoHomLogin?ticket=' + ticket,
+                                     cookies=ck)
+        response_data = response_data.json()
+        if response_data.get('resoultCode') == '0':
+            sign = response_data.get('sign')
+            return sign
+        else:
+            print(f"获取sign失败[{response_data.get('resoultCode')}]: {response_data}")
     except Exception as e:
         print(e)
+    return None
 
 
 def level_ex(phone, rightsId,session,ck):
@@ -329,15 +337,46 @@ def level_ex(phone, rightsId,session,ck):
         bd = js.call('main').split('=')
         ck[bd[0]] = bd[1]
         now = datetime.datetime.now().strftime('%H:%M:%S.%f')
-        url = "https://wapside.189.cn:9001/jt-sign/paradise/conversionRights"
+        url = "https://wappark.189.cn/jt-sign/paradise/conversionRights"
         data = {"para": encrypt_para(f'{{"phone":{phone},"rightsId":"{rightsId}"}},"receiveCount":1')}
 
-        response = session.post('https://wapside.189.cn:9001/jt-sign/paradise/conversionRights', json=data,cookies=ck)
+        response = session.post('https://wappark.189.cn/jt-sign/paradise/conversionRights', json=data,cookies=ck)
         print(f'{now}--Phone:{phone}--{response.text}')
     except Exception as e:
         print(e)
 
+def getParadiseInfo(phone, session):
+    try:
+        bd = js.call('main').split('=')
+        ck[bd[0]] = bd[1]
 
+        url = "https://wappark.189.cn/jt-sign/paradise/getParadiseInfo"
+        data = {"para": encrypt_para(f'{{"phone":{phone}}}')}
+
+        response = session.post(url, json=data, cookies=ck)
+        # printn(f'{phone[-4:]}=='+response.text)
+        resp = json.loads(response.text)
+        level = resp["userInfo"]["levelInfoMap"]["level"]
+        jy = resp["userInfo"]["levelInfoMap"]["growthValue"]
+        printn(f'等级：{level},经验：{jy}')
+        return level, jy
+    except Exception as e:
+        print(e)
+
+def aes_ecb_encrypt(plaintext, key):
+    key = key.encode('utf-8')
+    if len(key) not in [16, 24, 32]:
+        raise ValueError("密钥长度必须为16/24/32字节")
+
+    # 对明文进行PKCS7填充
+    padded_data = pad(plaintext.encode('utf-8'), AES.block_size)
+    #padded_data = plaintext.encode('utf-8')
+    # 创建AES ECB加密器
+    cipher = AES.new(key, AES.MODE_ECB)
+
+    # 加密并返回Base64编码结果
+    ciphertext = cipher.encrypt(padded_data)
+    return base64.b64encode(ciphertext).decode('utf-8')
 
 def ks(phone, ticket,level, uid):
     global wt
@@ -355,9 +394,13 @@ def ks(phone, ticket,level, uid):
         bd = js.call('main').split('=')
         ck[bd[0]] = bd[1]
 
-    login = s.post('https://wapact.189.cn:9001/unified/user/login',
-                   json={"ticket": ticket, "backUrl": "https%3A%2F%2Fwapact.189.cn%3A9001",
-                         "platformCode": "P201010301", "loginType": 2}, cookies=ck).json()
+    data2 = aes_ecb_encrypt(json.dumps(
+        {"ticket": ticket, "backUrl": "https%3A%2F%2Fwapact.189.cn%3A9001", "platformCode": "P201010301",
+         "loginType": 2}), 'telecom_wap_2018')
+
+    login = ss.post('https://wapact.189.cn:9001/unified/user/login', data=data2,
+                    headers={"Content-Type": "application/json;charset=UTF-8",
+                             "Accept": "application/json, text/javascript, */*; q=0.01"}, cookies=ck).json()
     if login['code'] == 0:
         printn(phone + " 获取token成功")
         s.headers["Authorization"] = "Bearer " + login["biz"]["token"]
@@ -373,12 +416,14 @@ def ks(phone, ticket,level, uid):
                 "sign": sign}
             s.headers.update(new_header)
             if dd == '01' or dirsize == 0:
-                getId(phone,ck,s)
+                getId(phone,ck,s,ticket)
                 with open('权益id.log', 'w') as f:
                     f.write(json.dumps(data))
                 print('再跑一次脚本')
             rightsId = data[yf][level]
-
+            ll, jy = getParadiseInfo(phone, s)
+            msg = f'{phone[-4:]}:云宝等级：{ll},经验值：{jy}\n'
+            printn(msg)
             start_time = time.time()
             while 1 == 1:
                 current_time = time.time()
@@ -440,14 +485,15 @@ def main():
     else:
         print("瑞数加密已关闭")
         rs = 0
-    if os.environ.get('chinaTelecomAccount') != None:
-        chinaTelecomAccount = os.environ.get('chinaTelecomAccount')
-    else:
-        print('添加chinaTelecomAccount环境变量啊')
+    # if os.environ.get('chinaTelecomAccount') != None:
+    #     chinaTelecomAccount = os.environ.get('chinaTelecomAccount')
+    # else:
+    #     print('添加chinaTelecomAccount环境变量啊')
+    chinaTelecomAccount = '19952447525@398104@6'
 
     for i in chinaTelecomAccount.split('&'):
 
-        i = i.split('#')
+        i = i.split('@')
         phone = i[0]
         password = i[1]
         level = i[2]
@@ -465,7 +511,7 @@ def main():
             ticket = userLoginNormal(phone, password)
 
         if ticket:
-            threading.Thread(target=ks, args=(phone, ticket,level,uid)).start()
+            threading.Thread(target=ks, args=(phone, ticket, level, uid)).start()
 
             time.sleep(1)
         else:
